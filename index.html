@@ -587,8 +587,8 @@
              if (isNaN(betAmount) || betAmount == 0) {
                  showAlertInfo('請輸入下注金額');
                  return;
-             } else if (betAmount < 0) {
-                 showAlertInfo('不要鬧');
+             } else if (betAmount > 0) {
+                 showAlertInfo('請下注負值');
                  return;
              } else if (betAmount > balance) {
                  showAlertInfo('餘額不足');
