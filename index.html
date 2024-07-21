@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market</title>
+    <style>
+        @keyframes fadeInZoom {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 0.9;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeOutZoom {
+            0% {
+                opacity: 0.9;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            position: relative;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .button-row {
+            display: flex;
+            position: absolute;
+            top: 23px;
+            right: 20px;
+            align-items: center;
+        }
+
+        .intro-button,
+        .register-button,
+        .login-button {
+            font-size: 1em;
+            cursor: pointer;
+            background: none;
+            border: none;
+            outline: none;
+        }
+
+        .login-button {
+            color: #fff;
+            background: #000;
+            border-radius: 6px;
+            padding: 3px 6px;
+        }
+
+        .intro-button, .register-button {
+            color: #aaa;
+            padding: 3px 6px;
+        }
+
+        .divider {
+            border-left: 1px solid #ddd; /* 顏色和簡介按鈕一致 */
+            height: 14px; /* 調整高度以適應按鈕 */
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.4em;
+            color: #333;
+        }
+        .header img {
+            width: 100px; /* 根據你的需求調整尺寸 */
+            height: auto;
+        }
+
+        .intro-modal,
+        .register-modal,
+        .login-modal {
+            position: fixed;
+            top: 29%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            text-align: left;
+            animation: fadeInZoom 0.5s forwards;
+            z-index: 10;
+            display: none;
+        }
+
+        .register-modal,
+        .login-modal {
+            top: 27%;
+        }
+
+        #loadingMessage {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: black;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .message-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: black;
+        }
+
+
+        .container {
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            padding: 20px;
+            box-shadow: none;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+
+        h1 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            margin-top: 75px;
+            color: #333;
+        }
+
+        .balance {
+            margin: 20px 0;
+            font-size: 1em;
+            color: #666;
+        }
+
+        .chart {
+            width: 100%;
+            height: 200px;
+            background-color: #e9ecef;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .multiplier {
+            font-size: 1.5em;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #333;
+        }
+
+        .crashed {
+            color: red;
+        }
+
+        .bet-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .bet-controls input {
+            width: 68%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            background: #f9f9f9;
+            color: #333;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            outline: none;
+        }
+
+        .bet-controls button {
+            width: 25%;
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #000;
+            color: #fff;
+            transition: box-shadow 0.2s ease;
+            outline: none;
+        }
+
+        .bet-controls button:active {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .percentage-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .percentage-controls button {
+            width: 19%;
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #dedede;
+            color: #000;
+            transition: box-shadow 0.2s ease;
+            outline: none;
+        }
+
+        .percentage-controls button:active {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .cashout-controls {
+            margin-top: 20px;
+        }
+
+        .cashout-controls button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            background-color: #dc3545;
+            color: #fff;
+            transition: box-shadow 0.2s ease;
+            outline: none;
+        }
+
+        .cashout-controls button:active {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .line {
+            stroke: #333;
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .ball {
+            fill: #333;
+        }
+
+        .cashout-info,
+        .alert-info {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: #fff;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+
+        .alert-info {
+            background: rgba(255, 0, 0, 0.7);
+        }
+
+        .left-scale {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+        }
+
+        .left-scale div {
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: #000;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #000;
+            color: #fff;
+            transition: box-shadow 0.2s ease;
+            outline: none;
+        }
+
+
+        .message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px;
+            border-radius: 15px;
+            color: #fff;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+
+
+
+
+        .form-group button:active {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header"><img src="logo.svg" alt="𝔑𝔗𝔘𝔐𝔈𝔇 ℭ𝔄𝔐𝔓"></div>
+    <div class="button-row">
+        <button class="intro-button" onclick=" redirect()">股票</button>
+        <div class="divider"></div>
+        <button class="intro-button" onclick="toggleIntro()">介紹</button>
+        <div class="divider"></div>
+        <button class="register-button" onclick="toggleRegister()">註冊</button>
+        <button class="login-button" onclick="toggleLogin()">登入</button>
+        <button id="userButton" class="intro-button" style="display:none;"></button>
+    </div>
+    <div id="introModal" class="intro-modal center">
+        <button class="close-btn" onclick="toggleIntro()">×</button>
+        <h2>股市</h2>
+        <p>身為臺大醫學系的學生，你意外發現一家興櫃公司。這家公司雖然是個空殼公司，但蘊藏著巨大的投資機會。負責人表示，當倍數越高，他決定惡性倒閉的可能性越低。
+<br><br>
+        你決定將畢生的家教收入投資進去，希望在公司負責人捲款逃跑之前，能夠從中獲利⋯</p>
+    </div>
+    <div id="registerModal" class="register-modal center">
+        <button class="close-btn" onclick="toggleRegister()">×</button>
+        <h2>註冊</h2>
+        <div class="form-group">
+            <label for="registerUsername">帳號：</label>
+            <input type="text" id="registerUsername" placeholder="輸入帳號">
+        </div>
+        <div class="form-group">
+            <label for="registerPassword">密碼：</label>
+            <input type="password" id="registerPassword" placeholder="輸入密碼">
+        </div>
+        <div class="form-group">
+            <button onclick="register()">註冊</button>
+        </div>
+    </div>
+    <div id="loginModal" class="login-modal center">
+        <button class="close-btn" onclick="toggleLogin()">×</button>
+        <h2>登入</h2>
+        <div class="form-group">
+            <label for="loginUsername">帳號：</label>
+            <input type="text" id="loginUsername" placeholder="輸入帳號">
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">密碼：</label>
+            <input type="password" id="loginPassword" placeholder="輸入密碼">
+        </div>
+        <div class="form-group">
+            <button onclick="login()">登入</button>
+        </div>
+    </div>
+    <div class="container">
+        <h1>ℭ𝔯𝔞𝔰𝔥𝔢𝔡</h1>
+        <div class="balance">帳戶餘額： <span id="balance">請先註冊或登入</span></div>
+        <div class="chart" id="chart">
+            <div class="multiplier" id="multiplier">1.00x</div>
+            <canvas id="chartCanvas" style="width: 100%; height: 200px;"></canvas>
+        </div>
+        <!-- 加載動畫 -->
+        <div id="loadingMessage">
+            <div class="spinner"></div>
+            <div class="message-text">修蛋幾勒</div>
+        </div>
+        <div class="bet-controls">
+            <input type="number" id="betAmount" placeholder="金額，止盈後即可重新下注。" min="0" step="0.01">
+            <button onclick="placeBet()">下單</button>
+        </div>
+        <div class="percentage-controls">
+            <button onclick="setBetRemainder()">零頭</button>
+            <button onclick="setBetPercentage(10)">10%</button>
+            <button onclick="setBetPercentage(25)">25%</button>
+            <button onclick="setBetPercentage(50)">50%</button>
+            <button onclick="setBetPercentage(100)">100%</button>
+        </div>
+        <div class="cashout-controls">
+            <button onclick="cashOut()">止盈</button>
+        </div>
+    </div>
+    <script>
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbz2FkuOnsDZb3OzY-lsHiO5z1djSmjtjn1Hfgzez7ijpYjkVbX3xPsUWkWKX82Pa1o/exec'; // 替換為你的Google Apps Script部署URL
+         let balance = 0;
+         let betAmount = 0;
+         let multiplier = 1.00;
+         let gameRunning = false;
+         let interval;
+         let updateInterval;
+         let pathData = "M0,200";
+         let areaData = "M0,200";
+         let cashedOut = true;
+         let cashoutMultiplier = 1;
+         let username;
+         let change = 0;
+         let updating = false;
+         const canvas = document.getElementById('chartCanvas');
+         const canvasWidth = canvas.width;
+         const ctx = canvas.getContext('2d');
+
+         // 设置高分辨率
+         const scale = 3; // 这里是放大倍数，可以根据需要调整
+         canvas.width = canvas.offsetWidth * scale;
+         canvas.height = canvas.offsetHeight * scale;
+         ctx.scale(scale, scale);
+
+         document.addEventListener("DOMContentLoaded", () => {
+            // 檢查 localStorage 中是否有儲存的使用者資訊
+            const savedUsername = localStorage.getItem('username');
+            const savedPassword = localStorage.getItem('password');
+            if (savedUsername && savedPassword) {
+                // 自動登入
+                showLoading();
+                fetch(`${scriptUrl}?action=queryBalance&username=${savedUsername}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            hideLoading();
+                            balance = data.balance;
+                            user = savedUsername;
+                            username = savedUsername;  // 這裡賦值
+                            const userButton = document.getElementById('userButton');
+                            const dividers = document.querySelectorAll('.divider');
+                            userButton.style.display = 'block';
+                            userButton.textContent = `${username}`;
+                            document.querySelector('.login-button').style.display = 'none';
+                            document.querySelector('.register-button').style.display = 'none';
+                            dividers.forEach(divider => {
+                                divider.style.display = 'block';
+                            });
+                            updateBalance();
+                            showMessage('自動登入成功！', 'cashout-info');
+                        } else {
+                            hideLoading();
+                            showMessage('自動登入失敗！', 'alert-info');
+                        }
+                    });
+            }
+        });
+
+         function updateBalance() {
+             if (username) { // 如果用戶已登入
+                 balance = Math.round(balance * 100) / 100;
+                 document.getElementById('balance').textContent = balance.toFixed(2) + " NTD";
+                 console.log('balance updated to ' + balance);
+             } else {
+                 document.getElementById('balance').textContent = '請先註冊或登入';
+             }
+         }
+
+         function updateMultiplier() {
+             document.getElementById('multiplier').textContent = multiplier.toFixed(2) + '×';
+         }
+
+         function updateLine() {
+             // 清除并设置新的画布大小
+             canvas.width = canvas.offsetWidth * scale;
+             canvas.height = canvas.offsetHeight * scale;
+             ctx.scale(scale, scale);
+
+             ctx.clearRect(0, 0, canvas.width / scale, canvas.height / scale);
+             ctx.beginPath();
+             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height / scale);
+             gradient.addColorStop(0, 'rgba(255, 167, 38, 0.9)');
+             gradient.addColorStop(1, 'rgba(255, 167, 38, 0.5)');
+
+             const points = pathData.split(' ').map(point => {
+                 const [x, y] = point.substring(1).split(',');
+                 return { x: parseFloat(x), y: parseFloat(y) };
+             });
+
+             ctx.moveTo(0, 200);
+             points.forEach(point => {
+                 ctx.lineTo(point.x, point.y);
+             });
+             ctx.lineTo(points[points.length - 1].x, 200);
+             ctx.closePath();
+             ctx.fillStyle = gradient;
+             ctx.fill();
+
+             // 绘制线条
+             ctx.beginPath();
+             ctx.moveTo(points[0].x, points[0].y);
+             for (let i = 1; i < points.length; i++) {
+                 ctx.lineTo(points[i].x, points[i].y);
+             }
+             ctx.strokeStyle = '#333';
+             ctx.lineWidth = 13 / scale; // 调整线宽
+             ctx.stroke();
+
+             // 绘制球
+             const lastPoint = points[points.length - 1];
+             ctx.beginPath();
+             ctx.arc(lastPoint.x, lastPoint.y, 5 / scale, 0, 2 * Math.PI, false);
+             ctx.fillStyle = '#333';
+             ctx.fill();
+         }
+
+
+         function placeBet() {
+             cashOutMultiplier = 1;
+             if (!cashedOut || updating || balance < 0) return; // Prevent placing a new bet while the game is running
+             if (interval) {
+                 clearInterval(interval);
+             }
+             document.getElementById('multiplier').classList.remove('crashed');
+             betAmount = parseFloat(document.getElementById('betAmount').value);
+             if (isNaN(betAmount) || betAmount == 0) {
+                 showAlertInfo('請輸入下注金額');
+                 return;
+             } else if (betAmount < 0) {
+                 showAlertInfo('不要鬧');
+                 return;
+             } else if (betAmount > balance) {
+                 showAlertInfo('餘額不足');
+                 return;
+             } else {
+                 document.getElementById('multiplier').style.color = '#333';
+             }
+             gameRunning = true;
+             change = -betAmount;
+             balance += change;
+             updateBalance();
+             cashedOut = false;
+             startGame();
+         }
+
+
+         function startGame() {
+             if (interval) {
+                 clearInterval(interval);
+            }
+             if (updateInterval) {
+                console.log('interval cleared');
+                clearInterval(updateInterval);
+            }
+             multiplier = 1.00;
+             pathData = "M0,200";
+             areaData = "M0,200";
+             updateMultiplier();
+             updateLine();
+             interval = setInterval(gameTick, getInterval(multiplier)); // 使用動態間隔
+         }
+
+         function getInterval(multiplier) {
+            return 2;
+         }
+
+         function gameTick() {
+             if (Math.random() < 0 ) {
+                 clearInterval(interval);
+                 document.getElementById('multiplier').classList.add('crashed');
+                 const crashedMultiplier = multiplier + 0.01;
+                 document.getElementById('multiplier').textContent = 'Crashed at ' + crashedMultiplier.toFixed(2) + 'x';
+                 document.getElementById('multiplier').style.color = 'red';
+                 if (!cashedOut && gameRunning) {
+                    showLoading();
+                    updateBalance();
+                    updateServerBalance();
+                 }
+                 gameRunning = false;
+                 cashedOut = true;
+                 betAmount = 0; // Clear the bet amount since it crashed
+             } else {
+                 multiplier += 0.01; // 快速乘數增量
+                 updateMultiplier();
+                 const x = Math.log(multiplier) * canvasWidth * 0.6;
+                 const y = 200 - (multiplier - 1) * 35;
+
+
+                 pathData += ` L${x},${y}`;
+                 areaData += ` L${x},${y}`;
+                 updateLine();
+                 clearInterval(interval); // 清除當前interval
+                 interval = setInterval(gameTick, getInterval(multiplier)); // 使用新的間隔
+             }
+         }
+
+
+         function getProbability(x) {
+             const lower = (x - 1) / x;
+             const upper = (x - 0.99) / (x + 0.01);
+             return (upper - lower) * x * 1.05;
+         }
+
+
+
+
+         function cashOut() {
+            if (gameRunning && !cashedOut && !updating) {
+                updating = true;
+                cashoutMultiplier = multiplier;
+                gameRunning = false;
+                showLoading();
+                showCashoutInfo();
+                change += Math.round(betAmount * cashoutMultiplier * 100)/100;
+                balance += Math.round(betAmount * cashoutMultiplier * 100)/100;
+                updateBalance();
+                updateServerBalance();
+                document.getElementById('multiplier').classList.remove('crashed');
+                document.getElementById('multiplier').style.color = '#333';
+                cashedOut = true;
+            } else {
+                console.log("You're not allowed to cash out NOW!")
+            }
+        }
+
+         function setBetPercentage(percentage) {
+             if (gameRunning && !cashedOut) return;
+             const amount = balance * (percentage / 100);
+             document.getElementById('betAmount').value = amount.toFixed(2);
+         }
+
+         function setBetRemainder() {
+             if (gameRunning && !cashedOut) return;
+             const amount = balance % 100;
+             document.getElementById('betAmount').value = amount.toFixed(2);
+         }
+
+         function showCashoutInfo() {
+             const chart = document.getElementById('chart');
+             const cashoutInfo = document.createElement('div');
+             cashoutInfo.className = 'cashout-info';
+             cashoutInfo.textContent = `止盈於 ${cashoutMultiplier.toFixed(2)}x`;
+             chart.appendChild(cashoutInfo);
+             setTimeout(() => {
+                 cashoutInfo.style.opacity = '0';
+                 setTimeout(() => {
+                     chart.removeChild(cashoutInfo);
+                 }, 1000); // 1秒後移除元素
+             }, 1000); // 1秒後開始淡出
+         }
+
+
+         function showAlertInfo(message) {
+             const chart = document.getElementById('chart');
+             const alertInfo = document.createElement('div');
+             alertInfo.className = 'alert-info';
+             alertInfo.textContent = message;
+             chart.appendChild(alertInfo);
+             setTimeout(() => {
+                 alertInfo.style.opacity = '0';
+                 setTimeout(() => {
+                     chart.removeChild(alertInfo);
+                 }, 1000); // 1秒後移除元素
+             }, 1000); // 1秒後開始淡出
+         }
+
+         function toggleIntro() {
+             const introModal = document.getElementById('introModal');
+             if (introModal.style.display === 'none' || introModal.style.display === '') {
+                 introModal.style.display = 'block';
+                 introModal.style.animation = 'fadeInZoom 0.5s forwards';
+             } else {
+                 introModal.style.animation = 'fadeOutZoom 0.5s forwards';
+                 setTimeout(() => {
+                     introModal.style.display = 'none';
+                 }, 500);
+             }
+         }
+
+         function showMessage(messageText, className) {
+             const existingMessage = document.querySelector('.message');
+             if (existingMessage) {
+                 document.body.removeChild(existingMessage);
+             }
+             const message = document.createElement('div');
+             message.className = `message ${className}`;
+             message.textContent = messageText;
+             document.body.appendChild(message);
+
+             setTimeout(() => {
+                 message.style.opacity = '0';
+                 setTimeout(() => {
+                     document.body.removeChild(message);
+                 }, 1000); // 1秒後移除元素
+             }, 1000); // 1秒後開始淡出
+         }
+
+         function toggleRegister() {
+             const registerModal = document.getElementById('registerModal');
+             const loginModal = document.getElementById('loginModal'); // 新增這一行
+
+             if (registerModal.style.display === 'none' || registerModal.style.display === '') {
+                 registerModal.style.display = 'block';
+                 registerModal.style.animation = 'fadeInZoom 0.5s forwards';
+                 loginModal.style.display = 'none'; // 新增這一行
+             } else {
+                 registerModal.style.animation = 'fadeOutZoom 0.5s forwards';
+                 setTimeout(() => {
+                     registerModal.style.display = 'none';
+                 }, 500);
+             }
+         }
+
+         function toggleLogin() {
+             const loginModal = document.getElementById('loginModal');
+             const registerModal = document.getElementById('registerModal');
+
+             if (loginModal.style.display === 'none' || loginModal.style.display === '') {
+                 loginModal.style.display = 'block';
+                 loginModal.style.animation = 'fadeInZoom 0.5s forwards';
+                 registerModal.style.display = 'none';
+             } else {
+                 loginModal.style.animation = 'fadeOutZoom 0.5s forwards';
+                 setTimeout(() => {
+                     loginModal.style.display = 'none';
+                 }, 500);
+             }
+         }
+
+        function register() {
+            const registerUsername = document.getElementById('registerUsername').value;
+            const registerPassword = document.getElementById('registerPassword').value;
+            showLoading();
+            fetch(`${scriptUrl}?action=registerUser&username=${registerUsername}&password=${registerPassword}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        hideLoading();
+                        showMessage('註冊成功！', 'cashout-info');
+                        username = registerUsername;  // 這裡賦值
+                        localStorage.setItem('username', loginUsername);
+                        localStorage.setItem('password', loginPassword);
+                        const userButton = document.getElementById('userButton');
+                        userButton.style.display = 'block';
+                        userButton.textContent = `${username}`;
+                        document.querySelector('.login-button').style.display = 'none';
+                        document.querySelector('.register-button').style.display = 'none';
+                        balance = data.balance;
+                        updateBalance();
+                        toggleRegister();
+                    } else {
+                        hideLoading();
+                        showMessage(data.message, 'alert-info');
+                    }
+                });
+        }
+
+        function login() {
+            const loginUsername = document.getElementById('loginUsername').value;
+            const loginPassword = document.getElementById('loginPassword').value;
+            showLoading();
+            fetch(`${scriptUrl}?action=checkLogin&username=${loginUsername}&password=${loginPassword}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        hideLoading()
+                        balance = data.balance;
+                        username = loginUsername;  // 這裡賦值
+                        localStorage.setItem('username', loginUsername);
+                        localStorage.setItem('password', loginPassword);
+                        const userButton = document.getElementById('userButton');
+                        userButton.style.display = 'block';
+                        userButton.textContent = `${username}`;
+                        document.querySelector('.login-button').style.display = 'none';
+                        document.querySelector('.register-button').style.display = 'none';
+                        updateBalance();
+                        showMessage('登入成功！', 'cashout-info');
+                        toggleLogin();
+                    } else {
+                        hideLoading();
+                        showMessage('登入失敗！', 'alert-info');
+                    }
+                });
+        }
+
+        function updateServerBalance() {
+            fetch(`${scriptUrl}?action=updateBalance&username=${username}&changeAmount=${change}&c=0`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('server balance updated');
+                        balance = data.balance;
+                        console.log(data.balance);
+                        console.log(balance);
+                        hideLoading();
+                    } else {
+                        hideLoading();
+                        showMessage('更新餘額失敗', 'alert-info');
+                    }
+                });
+        }
+
+        function redirect(){
+            window.location.href = 'https://jedieason.github.io/Trading-interface/';
+        }
+
+         updateMultiplier();
+        // 停止網站運行的函數
+
+        function showLoading() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.display = 'flex';
+            setTimeout(() => {
+                loadingMessage.style.opacity = '1';
+            }, 10);
+        }
+
+        function hideLoading() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.opacity = '0';
+            setTimeout(() => {
+                loadingMessage.style.display = 'none';
+            }, 500);
+            updating = false;
+            startUpdatingBalance();
+        }
+
+        async function getBalance(userName) {
+            const url = `${scriptUrl}?action=queryBalance&username=${encodeURIComponent(userName)}`;
+            const response = await fetch(url);
+            const result = await response.json();
+            return result.success ? result.balance : 0;
+        }
+
+        function startUpdatingBalance() {
+            console.log('interval starting');
+            updateInterval = setInterval(async () => {
+                if (username && (!updating || cashedOut)) {
+                    const balanceCache = await getBalance(username);
+                    if (updating || !cashedOut){
+                        console.log('interval cleared');
+                        clearInterval(updateInterval);
+                    } else {
+                        balance = Math.round(balanceCache * 100) / 100;
+                        document.getElementById('balance').textContent = balance.toFixed(2) + " NTD";
+                        console.log("Auto balance updated to " + balance);
+                    }
+                }
+            }, 10000); // 每 10 秒更新一次
+        }
+
+        function detectDevToolsAndRespond() {
+        let devtools = false;
+        const threshold = 160;
+
+        function stopExecution() {
+            document.body.innerHTML = '<h1>你不可以作弊😡</h1>';
+            setTimeout(function() {
+            window.location.href = 'https://youtu.be/dQw4w9WgXcQ';
+            }, 2000);
+        }
+
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function checkDevTools() {
+            const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+            const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+            
+            if (
+            !(widthThreshold && heightThreshold) &&
+            ((window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) || widthThreshold || heightThreshold)
+            ) {
+            if (!devtools) {
+                devtools = true;
+                stopExecution();
+            }
+            } else {
+            devtools = false;
+            }
+        }
+
+        if (!isMobile()) {
+            // 每秒檢查一次
+            setInterval(checkDevTools, 1000);
+        } else {
+            console.log('在移動設備上，不執行開發者工具檢測');
+        }
+        }
+
+        // 使用方法
+        detectDevToolsAndRespond();
+    </script>
+</body>
+</html>
